@@ -1,45 +1,70 @@
 <template>
   <div>
-    <v-btn @click="test"></v-btn>
+    <v-btn @click="test">aa</v-btn>
     admin
-    {{notion}}
+    {{notionRepetition}}
+    {{notionOnceEach}}
   </div>
 </template>
 <script>
 import { db } from "@/plugins/firebase";
 import Worker from "worker-loader!../worker";
+import WorkerCompleOther from "worker-loader!../WorkerCompleOther";
+import WorkerCompleBattle from "worker-loader!../WorkerCompleBattle";
 
 export default {
   data() {
     return {
-      notion: null
+      notionRepetition: null,
+      notionOnceEach: null
     };
   },
   methods: {
     test() {
-      const worker = new Worker("worker.js");
-      worker.postMessage("こんにちは！");
+      // const worker = new WorkerOnceEach("workerOnceEach.js");
+      // worker.postMessage("こんにちは！");
     }
   },
   watch: {
-    notion() {
-      console.log(this.notion[0].ref);
-      console.log(this.notion[0].createdAt);
+    notionRepetition() {
       const now = new Date();
       const timeDate =
-        now.getTime() - this.notion[0].createdAt.toDate().getTime();
+        now.getTime() - this.notionRepetition[0].createdAt.toDate().getTime();
       const floorDate = Math.floor(timeDate / (1000 * 60));
-      if (floorDate < 1) {
+      if (floorDate < 0.5) {
         // ここでサービスワーカーを呼び出す
         const worker = new Worker("worker.js");
-        worker.postMessage("こんにちは！");
+        worker.postMessage(this.notionRepetition[0].ref);
+      }
+    },
+    notionOnceEach() {
+      const now = new Date();
+      const timeDate =
+        now.getTime() - this.notionOnceEach[0].createdAt.toDate().getTime();
+      const floorDate = Math.floor(timeDate / (1000 * 60));
+      if (floorDate < 0.5) {
+        if (this.notionOnceEach[0].whichNotion == 1) {
+          //なでる、おやつ、写真完了
+          // ここでサービスワーカーを呼び出す
+          const worker = new WorkerCompleOther("workerCompleOther.js");
+          worker.postMessage(this.notionOnceEach[0].ref);
+        } else if (this.notionOnceEach[0].whichNotion == 2) {
+          //バトル完了
+          // ここでサービスワーカーを呼び出す
+          const worker = new WorkerCompleBattle("WorkerCompleBattle.js");
+          worker.postMessage(this.notionOnceEach[0].ref);
+        }
       }
     }
   },
   firestore() {
     return {
-      notion: db
-        .collection("notion")
+      notionRepetition: db
+        .collection("notionRepetition")
+        .orderBy("createdAt", "desc")
+        .limit(1),
+      notionOnceEach: db
+        .collection("notionOnceEach")
         .orderBy("createdAt", "desc")
         .limit(1)
     };

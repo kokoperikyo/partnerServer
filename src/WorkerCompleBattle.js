@@ -1,14 +1,22 @@
+import {
+  db
+} from "@/plugins/firebase";
 import axios from 'axios';
 self.addEventListener('message', (message) => {
-  var counter = 0;
-  var notionTitle;
-  var id = setInterval(() => {
-    if (counter % 2 == 0) {
-      notionTitle = "バトルをしてください"
-    } else {
-      notionTitle = "おやつ、なでる、スナップショット"
-    }
+  //表示用のステータスをその他待にする
+  db.collection("whichNotionSt")
+    .doc(message.data)
+    .set({
+      st: 11
+    });
 
+  setTimeout(() => {
+    //ボタン表示用のステータスをその他表示用にする
+    db.collection("whichNotionSt")
+      .doc(message.data)
+      .set({
+        st: 1
+      });
     // 通知本体
     let argObj = {
       // 受信者のトークンIDと通知内容
@@ -16,8 +24,8 @@ self.addEventListener('message', (message) => {
       priority: "high",
       content_available: true,
       notification: {
-        title: `${notionTitle}`,
-        body: "15のやつ",
+        title: "おやつ・なでる・スナップショットを実行してください",
+        body: "完了後このアプリを起動して完了",
         badge: "1"
       }
     };
@@ -31,9 +39,8 @@ self.addEventListener('message', (message) => {
     };
     axios.post("https://fcm.googleapis.com/fcm/send", argObj, optionObj);
 
-    counter++
-    if (counter == 13) {
-      clearInterval(id)
-    }
+
+
   }, 960000);
+
 });
